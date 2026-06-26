@@ -162,6 +162,58 @@ npm run dev
 
 ---
 
+## Skalbarhet — 25 000 användare, 40 bataljoner
+
+Prototypen är testad i ensam-kompani-läge men datamodell och autentisering är designade för att hålla i skala. Nedan beskrivs de tre verkliga problemen och hur de löses.
+
+### Problem 1: Multi-tenancy saknas (allvarligt)
+
+Idag är org-trädet ett enda träd i databasen. 40 bataljoner i samma träd med delad åtkomstkontroll innebär att en bug i `getSubtreeIds` kan läcka data över bataljonsgränser.
+
+**Lösning:** PostgreSQL Row-Level Security (RLS) med en `battalion_id`-kolumn på alla känsliga tabeller, alternativt separata databasscheman per bataljon. RLS är att föredra — det ger isolering nära datan snarare än i applikationslagret.
+
+```sql
+-- Exempel: RLS på reports
+ALTER TABLE reports ENABLE ROW LEVEL SECURITY;
+CREATE POLICY battalion_isolation ON reports
+  USING (battalion_id = current_setting('app.battalion_id')::int);
+```
+
+### Problem 2: `pendingCount` pollas vid varje sidladdning
+
+`/api/reports/pending-count` (3–4 DB-queries) anropas varje gång Layout.jsx renderas för samtliga inloggade användare. Vid 1 000 aktiva användare som navigerar flitigt ger det konstant onödig databasbelastning för data som sällan ändras.
+
+**Lösning:** Server-Sent Events (SSE) eller WebSocket för push när status ändras, alternativt Redis-cache med kort TTL (30 s). SSE är enklast att lägga till utan att ändra frontend-arkitekturen.
+
+### Problem 3: Anslutningspoolning vid horisontell skalning
+
+`pg.Pool` defaultar till 10 connections per Node.js-process. Med flera parallella processer bakom en load balancer multipliceras antalet connections mot PostgreSQL snabbt.
+
+**Lösning:** PgBouncer i transaction mode framför databasen absorberar connection-trycket och gör att Node.js-processerna kan skalas ut fritt.
+
+### Planerat arkitekturlyft
+
+```
+Cloudflare / CDN
+      │
+  Static SPA (nginx)
+      │
+  Load balancer
+  ├── Node.js (PM2 cluster, 4 workers)
+  ├── Node.js (PM2 cluster, 4 workers)
+  └── ...
+        │
+    PgBouncer
+        │
+  PostgreSQL 15 (primary + read replica)
+        │
+    Redis (cache + SSE pub/sub)
+```
+
+Realistisk concurrent load för Hemvärnet: ~500–1 000 användare under ett övningsveckoslut. Den nuvarande stacken klarar det med PgBouncer och PM2 utan omskrivning — multi-tenancy-isoleringen är det som *måste* på plats innan produktion.
+
+---
+
 ## Licens
 
 MIT — fri att använda, modifiera och dela. Prototypen är inte granskad för hantering av sekretessbelagd information.
