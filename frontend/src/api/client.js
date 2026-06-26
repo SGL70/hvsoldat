@@ -56,10 +56,11 @@ export const api = {
 
   // Reports
   reports:         (filter)   => api.get(`/reports${filter ? `?filter=${filter}` : ''}`),
+  pendingCount:    ()         => api.get('/reports/pending-count'),
   createReport:    (data)     => api.post('/reports', data),
   updateReport:    (id, data) => api.put(`/reports/${id}`, data),
   submitReport:    (id)       => api.post(`/reports/${id}/submit`),
-  reviewReport:    (id, action) => api.post(`/reports/${id}/review`, { action }),
+  reviewReport:    (id, action, comment) => api.post(`/reports/${id}/review`, { action, comment }),
   approveReport:   (id, action) => api.post(`/reports/${id}/approve`, { action }),
 
   // Equipment
@@ -77,6 +78,10 @@ export const api = {
   startInventory:  ()           => api.post('/inventory/start', {}),
   submitInventory: (id, items)  => api.post(`/inventory/${id}/submit`, { items: items || [] }),
   unitInventory:   ()           => api.get('/inventory/unit'),
+
+  // Personal
+  personalList:   ()         => api.get('/personal'),
+  updatePerson:   (id, data) => api.put(`/personal/${id}`, data),
 
   // PRIO import
   prioParse:  (file) => {

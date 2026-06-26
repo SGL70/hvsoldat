@@ -110,6 +110,100 @@ function CreateModal({ onClose, onCreated }) {
   );
 }
 
+const RESP_ICON = { ja: '✓', nej: '✗', kanske: '?' };
+const RESP_ROW  = {
+  ja:     'text-green-700',
+  nej:    'text-red-600',
+  kanske: 'text-yellow-600',
+};
+
+function ResponseSummary({ a }) {
+  const ja      = Number(a.count_ja)      || 0;
+  const nej     = Number(a.count_nej)     || 0;
+  const kanske  = Number(a.count_kanske)  || 0;
+  const pending = Number(a.count_pending) || 0;
+  const total   = ja + nej + kanske + pending;
+  if (total === 0) return null;
+  return (
+    <div className="flex items-center gap-2 mt-2 flex-wrap">
+      {ja > 0      && <span className="inline-flex items-center gap-1 text-xs text-green-700 bg-green-50 border border-green-200 rounded px-2 py-0.5">✓ {ja}</span>}
+      {nej > 0     && <span className="inline-flex items-center gap-1 text-xs text-red-600  bg-red-50   border border-red-200   rounded px-2 py-0.5">✗ {nej}</span>}
+      {kanske > 0  && <span className="inline-flex items-center gap-1 text-xs text-yellow-700 bg-yellow-50 border border-yellow-200 rounded px-2 py-0.5">? {kanske}</span>}
+      {pending > 0 && <span className="inline-flex items-center gap-1 text-xs text-gray-400 bg-gray-50 border border-gray-200 rounded px-2 py-0.5">– {pending}</span>}
+    </div>
+  );
+}
+
+function ActivityDetail({ actId }) {
+  const [detail, setDetail] = useState(null);
+
+  useEffect(() => {
+    api.activity(actId).then(setDetail);
+  }, [actId]);
+
+  if (!detail) return <p className="text-xs text-gray-400 py-2">Laddar…</p>;
+
+  // Group responses by unit
+  const groups = {};
+  for (const r of detail.responses) {
+    const key = r.unit_name || 'Okänd enhet';
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(r);
+  }
+
+  return (
+    <div className="mt-3 border-t border-gray-100 pt-3 space-y-3">
+      {Object.entries(groups).map(([unit, members]) => (
+        <div key={unit}>
+          <div className="text-xs font-semibold text-gray-500 mb-1">{unit}</div>
+          <div className="space-y-0.5">
+            {members.map(m => (
+              <div key={m.user_id} className="flex items-center gap-2 text-xs">
+                <span className={`w-4 text-center font-bold ${RESP_ROW[m.status] || 'text-gray-300'}`}>
+                  {RESP_ICON[m.status] || '–'}
+                </span>
+                <span className={m.status ? 'text-gray-700' : 'text-gray-400'}>{m.user_name}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ActivityCard({ a, responding, onRespond }) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-sm transition-shadow">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-2 mb-1">
+        <span className="font-medium text-gray-900 text-sm">{a.title}</span>
+        <span className={`badge shrink-0 ${TYPE_COLORS[a.type] || TYPE_COLORS.övrigt}`}>{a.type}</span>
+      </div>
+      <div className="text-xs text-gray-400 mb-0.5">{fmt(a.start_time)} – {fmt(a.end_time)}</div>
+      <div className="text-xs text-gray-400">{a.unit_name} · {a.created_by_name}</div>
+      {a.description && <p className="text-xs text-gray-500 mt-2">{a.description}</p>}
+
+      {/* Response counts + expand toggle */}
+      <div className="flex items-center justify-between mt-2">
+        <ResponseSummary a={a} />
+        <button onClick={() => setExpanded(e => !e)}
+                className="text-xs text-gray-400 hover:text-military-navy transition-colors shrink-0 ml-2">
+          {expanded ? 'Dölj ▲' : 'Visa svar ▾'}
+        </button>
+      </div>
+
+      {/* Expanded detail */}
+      {expanded && <ActivityDetail actId={a.id} />}
+
+      {/* My response */}
+      <ResponseButtons current={a.my_response} disabled={responding === a.id}
+                       onSelect={s => onRespond(a.id, s)} />
+    </div>
+  );
+}
+
 export default function Calendar() {
   const { hasRole } = useAuth();
   const [activities, setActivities] = useState([]);
@@ -129,24 +223,6 @@ export default function Calendar() {
   const past     = activities.filter(a => new Date(a.end_time) < new Date());
   const upcoming = activities.filter(a => new Date(a.end_time) >= new Date());
 
-  function ActivityCard({ a }) {
-    return (
-      <div className="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-sm transition-shadow">
-        <div className="flex items-start justify-between gap-2 mb-1">
-          <span className="font-medium text-gray-900 text-sm">{a.title}</span>
-          <span className={`badge shrink-0 ${TYPE_COLORS[a.type] || TYPE_COLORS.övrigt}`}>
-            {a.type}
-          </span>
-        </div>
-        <div className="text-xs text-gray-400 mb-0.5">{fmt(a.start_time)} – {fmt(a.end_time)}</div>
-        <div className="text-xs text-gray-400">{a.unit_name} · {a.created_by_name}</div>
-        {a.description && <p className="text-xs text-gray-500 mt-2">{a.description}</p>}
-        <ResponseButtons current={a.my_response} disabled={responding === a.id}
-                         onSelect={s => respond(a.id, s)} />
-      </div>
-    );
-  }
-
   return (
     <div className="p-6 max-w-3xl mx-auto">
       <div className="flex items-center justify-between mb-6">
@@ -164,22 +240,18 @@ export default function Calendar() {
 
       {upcoming.length > 0 && (
         <section className="mb-8">
-          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-            Kommande
-          </h2>
+          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Kommande</h2>
           <div className="space-y-3">
-            {upcoming.map(a => <ActivityCard key={a.id} a={a} />)}
+            {upcoming.map(a => <ActivityCard key={a.id} a={a} responding={responding} onRespond={respond} />)}
           </div>
         </section>
       )}
 
       {past.length > 0 && (
         <section>
-          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-            Genomförda
-          </h2>
+          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Genomförda</h2>
           <div className="space-y-3 opacity-60">
-            {past.map(a => <ActivityCard key={a.id} a={a} />)}
+            {past.map(a => <ActivityCard key={a.id} a={a} responding={responding} onRespond={respond} />)}
           </div>
         </section>
       )}

@@ -23,7 +23,11 @@ router.get('/', async (req, res) => {
 
   const result = await pool.query(`
     SELECT a.*, u.name AS created_by_name, o.name AS unit_name,
-           ar.status AS my_response
+           ar.status AS my_response,
+           (SELECT COUNT(*) FROM activity_responses WHERE activity_id=a.id AND status='ja')     AS count_ja,
+           (SELECT COUNT(*) FROM activity_responses WHERE activity_id=a.id AND status='nej')    AS count_nej,
+           (SELECT COUNT(*) FROM activity_responses WHERE activity_id=a.id AND status='kanske') AS count_kanske,
+           (SELECT COUNT(*) FROM activity_responses WHERE activity_id=a.id AND (status IS NULL OR status NOT IN ('ja','nej','kanske'))) AS count_pending
     FROM activities a
     JOIN users u ON u.id = a.created_by
     JOIN org_units o ON o.id = a.org_unit_id
@@ -74,11 +78,15 @@ router.get('/:id', async (req, res) => {
   if (!result.rows.length) return res.status(404).json({ error: 'Not found' });
 
   const responses = await pool.query(`
-    SELECT ar.*, u.name AS user_name, u.role
+    SELECT ar.*, u.name AS user_name, u.role,
+           ou.name AS unit_name, ou.id AS unit_id,
+           oup.name AS parent_unit_name
     FROM activity_responses ar
     JOIN users u ON u.id = ar.user_id
+    LEFT JOIN org_units ou  ON ou.id  = u.org_unit_id
+    LEFT JOIN org_units oup ON oup.id = ou.parent_id
     WHERE ar.activity_id = $1
-    ORDER BY u.name
+    ORDER BY COALESCE(oup.name, ou.name), ou.name, u.name
   `, [req.params.id]);
 
   res.json({ ...result.rows[0], responses: responses.rows });

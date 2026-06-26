@@ -81,7 +81,7 @@ export default function LossReport() {
                 FÖRLUSTFÖRTECKNING – ANMÄLAN
               </h1>
               <p className="text-sm text-gray-500 mt-1">
-                Blankett M7102-500360E · Bataljonssystem förberedelsesida
+                Blankett M7102-500360E · Hv-webben förberedelsesida
               </p>
             </div>
             <div className="text-right text-xs text-gray-400">
@@ -178,7 +178,7 @@ export default function LossReport() {
 
         {/* Print footer */}
         <div className="hidden print:block mt-8 pt-4 border-t border-gray-300 text-xs text-gray-400">
-          Bataljonssystem · Ärendeid {data.id} · Utskrivet {new Date().toLocaleString('sv-SE')}
+          Hv-webben · Ärendeid {data.id} · Utskrivet {new Date().toLocaleString('sv-SE')}
         </div>
       </div>
     </>

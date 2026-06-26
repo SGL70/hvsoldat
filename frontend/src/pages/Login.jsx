@@ -134,10 +134,14 @@ export default function Login() {
           </button>
         </div>
 
-        {/* Title */}
-        <h1 className="text-3xl font-bold text-[#1d3557] text-center mb-2">
-          Identifiera dig med BankID
-        </h1>
+        {/* Logo + app name */}
+        <div className="flex flex-col items-center mb-6">
+          <img src="/logo.png" alt="Hemvärnet" className="h-16 w-auto mb-3" />
+          <h1 className="text-xl font-bold text-[#1d3557] text-center">Välkommen till Hv-webben</h1>
+          <p className="text-center text-gray-500 text-sm mt-1">Logga in med BankID</p>
+        </div>
+
+        {/* BankID instruction */}
         <p className="text-center text-gray-500 text-sm mb-7">
           Öppna BankID-appen och skanna QR-koden.
         </p>
