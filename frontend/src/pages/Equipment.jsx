@@ -368,7 +368,7 @@ export default function Equipment() {
                             className="flex items-center gap-0 pr-4 hover:bg-gray-50 transition-colors">
                           <div className={`w-1 self-stretch shrink-0 ${STATUS_BAR[i.status] || 'bg-gray-200'}`} />
                           {i.image_path ? (
-                            <img src={`/uploads/equipment/${i.image_path}`} alt=""
+                            <img src={`/img/${i.image_path}`} alt=""
                                  className="w-10 h-10 object-cover rounded mx-3 shrink-0" />
                           ) : (
                             <div className="w-10 h-10 bg-gray-100 rounded mx-3 shrink-0 flex items-center justify-center">

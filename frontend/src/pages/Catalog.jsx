@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 
 function imgSrc(item) {
   if (!item.image_path) return null;
-  return `/uploads/equipment/${item.image_path}`;
+  return `/img/${item.image_path}`;
 }
 
 function ArticleNumber({ value }) {

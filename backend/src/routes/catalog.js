@@ -8,7 +8,7 @@ const { requireAuth, requireLogistics } = require('../middleware/auth');
 const router = express.Router();
 router.use(requireAuth);
 
-const UPLOAD_DIR = path.join(__dirname, '../../uploads/equipment');
+const UPLOAD_DIR = path.join(__dirname, '../../../frontend/public/img');
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
 const storage = multer.diskStorage({
