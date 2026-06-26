@@ -4,6 +4,8 @@ Självhostad prototyp av ett digitalt administrativt stödsystem för Hemvärnet
 
 > **Status:** Aktiv prototyp — funktionell men inte produktionsklar. Saknar riktig BankID-integration, e-postnotiser och säkerhetshärdning för publikt internet.
 
+![Hv-webben dashboard](screenshot.png)
+
 ---
 
 ## Arkitektur
@@ -115,22 +117,59 @@ inventory_items    — per-person-svar på inventering
 
 **Krav:** Node.js 20+, PostgreSQL 15
 
+### 1. Klona och installera
+
 ```bash
-# Klona
 git clone https://github.com/SGL70/hv-webben.git
 cd hv-webben
 
-# Backend
-cd backend
-cp .env.example .env          # sätt DATABASE_URL och JWT_SECRET
-npm install
-npm run migrate               # kör SQL-migrationer
-npm start
+cd backend && npm install
+cd ../frontend && npm install
+```
 
-# Frontend (nytt terminalfönster)
-cd frontend
-npm install
-npm run dev
+### 2. Konfigurera miljövariabler
+
+```bash
+cd backend
+cp .env.example .env
+# Redigera .env — sätt DATABASE_URL och ett slumpmässigt JWT_SECRET
+```
+
+### 3. Skapa databasen
+
+```bash
+# Skapa PostgreSQL-databas och användare
+psql -U postgres <<'SQL'
+CREATE USER bataljon WITH PASSWORD 'ditt-lösenord';
+CREATE DATABASE bataljon OWNER bataljon;
+SQL
+
+# Kör schema, migrationer och seed-data i ett steg
+cd backend
+npm run db:setup
+```
+
+`db:setup` kör följande filer i ordning:
+
+| Fil | Innehåll |
+|-----|----------|
+| `schema.sql` | Alla tabeller |
+| `migrate_org_stab.sql` | Stöd för stab-enhetstyp |
+| `migrate_catalog.sql` | Utökad materialkatalog |
+| `migrate_inventory.sql` | Inventeringstabeller |
+| `migrate_loss.sql` | Förlustärenden |
+| `migrate_prio.sql` | PRIO-import |
+| `seed.sql` | Mock-användare + exempeldata |
+| `seed_catalog.sql` | 73 standardartiklar (VSH033PG) |
+
+### 4. Starta
+
+```bash
+# Backend (port 3000)
+cd backend && npm start
+
+# Frontend (nytt terminalfönster, port 5173)
+cd frontend && npm run dev
 ```
 
 Öppna `http://localhost:5173` — klicka på QR-koden för att välja testanvändare.
