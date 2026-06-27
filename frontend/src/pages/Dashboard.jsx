@@ -172,17 +172,18 @@ function NewsPanel({ canPost }) {
                      className="w-full object-cover max-h-48" />
               )}
               <div className="p-4">
-                <div className="flex items-start justify-between gap-2">
-                  <h3 className="text-sm font-semibold text-military-navy leading-tight">{post.title}</h3>
+                <h3 className="text-sm font-semibold text-military-navy leading-tight">{post.title}</h3>
+                {post.body && <p className="text-sm text-gray-600 mt-1 whitespace-pre-wrap">{post.body}</p>}
+                <div className="flex items-center justify-between mt-2">
+                  <p className="text-xs text-gray-400">{post.author_name} · {fmtDate(post.created_at)}</p>
                   {canPost && (
                     <button onClick={() => handleDelete(post.id)}
-                      className="shrink-0 text-xs text-gray-300 hover:text-red-500 transition-colors">
-                      ✕
+                      className="text-xs text-gray-400 hover:text-red-600 border border-gray-200 hover:border-red-300
+                                 rounded px-2 py-0.5 transition-colors">
+                      Ta bort
                     </button>
                   )}
                 </div>
-                {post.body && <p className="text-sm text-gray-600 mt-1 whitespace-pre-wrap">{post.body}</p>}
-                <p className="text-xs text-gray-400 mt-2">{post.author_name} · {fmtDate(post.created_at)}</p>
               </div>
             </div>
           ))}
