@@ -20,14 +20,15 @@ const upload = multer({
   fileFilter: (_req, file, cb) => cb(null, /^image\//.test(file.mimetype)),
 });
 
-// GET /api/news — latest 20 posts
+// GET /api/news — published posts (publish_at <= now), latest 20
 router.get('/', async (req, res) => {
   const result = await pool.query(`
     SELECT n.*, u.name AS author_name, o.name AS unit_name
     FROM news_posts n
     LEFT JOIN users u ON u.id = n.created_by
     LEFT JOIN org_units o ON o.id = n.org_unit_id
-    ORDER BY n.created_at DESC
+    WHERE n.publish_at <= NOW()
+    ORDER BY n.publish_at DESC
     LIMIT 20
   `);
   res.json(result.rows);
@@ -35,12 +36,12 @@ router.get('/', async (req, res) => {
 
 // POST /api/news — create post (logistics roles only)
 router.post('/', requireLogistics, async (req, res) => {
-  const { title, body } = req.body;
+  const { title, body, publish_at } = req.body;
   if (!title) return res.status(400).json({ error: 'Rubrik krävs' });
   const result = await pool.query(
-    `INSERT INTO news_posts (title, body, created_by, org_unit_id)
-     VALUES ($1, $2, $3, $4) RETURNING *`,
-    [title, body || null, req.user.id, req.user.org_unit_id]
+    `INSERT INTO news_posts (title, body, publish_at, created_by, org_unit_id)
+     VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+    [title, body || null, publish_at || new Date().toISOString(), req.user.id, req.user.org_unit_id]
   );
   res.status(201).json(result.rows[0]);
 });

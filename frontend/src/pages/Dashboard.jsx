@@ -54,14 +54,18 @@ function CreateNewsModal({ onClose, onCreated }) {
   const [body, setBody]     = useState('');
   const [image, setImage]   = useState(null);
   const [saving, setSaving] = useState(false);
+  const [publishMode, setPublishMode] = useState('now');
+  const [publishAt,   setPublishAt]   = useState('');
   const [error, setError]   = useState('');
 
   async function handleSubmit(e) {
     e.preventDefault();
     if (!title.trim()) { setError('Rubrik krävs'); return; }
+    if (publishMode === 'scheduled' && !publishAt) { setError('Ange datum och tid för publicering'); return; }
     setSaving(true);
     try {
-      const post = await api.createNews({ title: title.trim(), body: body.trim() || null });
+      const publish_at = publishMode === 'now' ? null : new Date(publishAt).toISOString();
+      const post = await api.createNews({ title: title.trim(), body: body.trim() || null, publish_at });
       if (image) await api.uploadNewsImage(post.id, image);
       onCreated();
       onClose();
@@ -93,6 +97,25 @@ function CreateNewsModal({ onClose, onCreated }) {
             <input type="file" accept="image/*" onChange={e => setImage(e.target.files[0] || null)}
               className="text-sm text-gray-600" />
           </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Publicering</label>
+            <div className="flex gap-4 mb-2">
+              <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                <input type="radio" name="publishMode" value="now"
+                  checked={publishMode === 'now'} onChange={() => setPublishMode('now')} />
+                Direkt
+              </label>
+              <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                <input type="radio" name="publishMode" value="scheduled"
+                  checked={publishMode === 'scheduled'} onChange={() => setPublishMode('scheduled')} />
+                Schemalägg
+              </label>
+            </div>
+            {publishMode === 'scheduled' && (
+              <input type="datetime-local" value={publishAt} onChange={e => setPublishAt(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-military-steel" />
+            )}
+          </div>
           <div className="flex gap-3 pt-1">
             <button type="button" onClick={onClose}
               className="flex-1 border border-gray-300 rounded-lg py-2 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
@@ -100,7 +123,7 @@ function CreateNewsModal({ onClose, onCreated }) {
             </button>
             <button type="submit" disabled={saving}
               className="flex-1 bg-military-navy text-white rounded-lg py-2 text-sm font-medium hover:bg-military-navy/90 disabled:opacity-50 transition-colors">
-              {saving ? 'Publicerar…' : 'Publicera'}
+              {saving ? 'Sparar…' : publishMode === 'now' ? 'Publicera' : 'Schemalägg'}
             </button>
           </div>
         </form>
@@ -212,6 +235,11 @@ export default function Dashboard() {
           </button>
         </div>
       )}
+
+      {/* Hero image */}
+      <div className="mb-5 rounded-xl overflow-hidden border border-gray-200 shadow-sm">
+        <img src="/hero.jpg" alt="Verksamhetsbild" className="w-full object-cover" style={{ maxHeight: '220px' }} />
+      </div>
 
       <div className="flex gap-5">
         {/* Left: activities + news side by side */}
