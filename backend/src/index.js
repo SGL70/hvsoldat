@@ -21,9 +21,13 @@ app.use('/api/inventory',  require('./routes/inventory'));
 app.use('/api/personal',   require('./routes/personal'));
 app.use('/api/news',       require('./routes/news'));
 
-// Serve uploaded images
+// Serve uploaded images (legacy uploads folder)
 const uploadsPath = path.join(__dirname, '../uploads');
 app.use('/uploads', express.static(uploadsPath));
+
+// Serve user-uploaded images from public/img (uploaded after build, not in dist)
+const publicImgPath = path.join(__dirname, '../../frontend/public/img');
+app.use('/img', express.static(publicImgPath));
 
 // Serve built frontend
 const staticPath = path.join(__dirname, '../../frontend/dist');
