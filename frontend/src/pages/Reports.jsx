@@ -28,7 +28,7 @@ function StatusBadge({ status }) {
   return <span className={`badge ${m.color}`}>{m.label}</span>;
 }
 
-function CreateModal({ onClose, onCreated }) {
+export function CreateModal({ onClose, onCreated }) {
   const [activities, setActivities] = useState([]);
   const [form, setForm] = useState({
     report_type:         'km_ers',

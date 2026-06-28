@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import { CreateModal } from './Reports';
 
 const STATUS_META = {
   ok:            { label:'Ok',            color:'bg-green-100 text-green-800'  },
@@ -187,6 +188,7 @@ export default function Arenden() {
   const [approveReports,  setApproveReports]  = useState([]);
   const [approvedHistory, setApprovedHistory] = useState([]);
   const [showHistory,     setShowHistory]     = useState(false);
+  const [showCreateReport, setShowCreateReport] = useState(false);
   const [showInvModal,    setShowInvModal]    = useState(false);
   const [startingInv,     setStartingInv]     = useState(false);
   const [editingReport,   setEditingReport]   = useState(null);
@@ -244,7 +246,7 @@ export default function Arenden() {
       <section>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-semibold text-gray-700">Mina km-ers / Utlägg</h2>
-          <button onClick={() => navigate('/rapporter')}
+          <button onClick={() => setShowCreateReport(true)}
                   className="btn-primary text-xs">
             Ny rapport
           </button>
@@ -585,6 +587,13 @@ export default function Arenden() {
         <StartInventoryModal
           onConfirm={handleStartInventory}
           onClose={() => setShowInvModal(false)}
+        />
+      )}
+
+      {showCreateReport && (
+        <CreateModal
+          onClose={() => setShowCreateReport(false)}
+          onCreated={() => { setShowCreateReport(false); load(); }}
         />
       )}
 
