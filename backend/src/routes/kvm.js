@@ -73,9 +73,12 @@ router.get('/cases/:id/afse', requireLogistics, async (req, res) => {
     } catch {}
   };
 
-  // Sätt NeedAppearances så PDF-läsaren renderar fält med rätt font utan att vi behöver flatten
-  const acroForm = pdf.catalog.get(PDFName.of('AcroForm'));
-  if (acroForm) acroForm.set(PDFName.of('NeedAppearances'), PDFBool.True);
+  // Sätt NeedAppearances så PDF-läsaren renderar fält med rätt font
+  try {
+    const acroFormRef = pdf.catalog.get(PDFName.of('AcroForm'));
+    const acroForm = pdf.context.lookup(acroFormRef);
+    if (acroForm && acroForm.set) acroForm.set(PDFName.of('NeedAppearances'), PDFBool.True);
+  } catch {}
 
   // KVM-inställningar
   set('myndighet',         s.myndighet || '');
