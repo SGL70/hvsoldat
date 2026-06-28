@@ -51,6 +51,7 @@ export const api = {
   // Activities
   activities:       ()         => api.get('/activities'),
   activity:         (id)       => api.get(`/activities/${id}`),
+  reportAttendance: (id, data) => api.post(`/activities/${id}/report-attendance`, data),
   createActivity:   (data)     => api.post('/activities', data),
   updateActivity:   (id, data) => api.put(`/activities/${id}`, data),
   deleteActivity:   (id)       => api.delete(`/activities/${id}`),

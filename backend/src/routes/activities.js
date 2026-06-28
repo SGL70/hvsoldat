@@ -148,4 +148,43 @@ router.put('/:id/attendance', requireRole('grpc'), async (req, res) => {
   res.json({ ok: true });
 });
 
+// POST /api/activities/:id/report-attendance — ansvarig rapporterar närvaro + km (grpc+)
+router.post('/:id/report-attendance', requireRole('grpc'), async (req, res) => {
+  const actId = parseInt(req.params.id);
+  const { present, absent, walk_ins } = req.body;
+  // present:   [{user_id, km}]
+  // absent:    [{user_id}]
+  // walk_ins:  [{user_id, km}]
+
+  const actRes = await pool.query('SELECT start_time FROM activities WHERE id=$1', [actId]);
+  if (!actRes.rows.length) return res.status(404).json({ error: 'Not found' });
+  const reportDate = new Date(actRes.rows[0].start_time).toISOString().split('T')[0];
+
+  const upsertResponse = (userId, attended) =>
+    pool.query(`
+      INSERT INTO activity_responses (activity_id, user_id, actual_attendance, updated_at)
+      VALUES ($1,$2,$3,NOW())
+      ON CONFLICT (activity_id, user_id) DO UPDATE SET actual_attendance=$3, updated_at=NOW()
+    `, [actId, userId, attended]);
+
+  const createKm = async (userId, km) => {
+    if (!km || km <= 0) return;
+    const exists = await pool.query(
+      'SELECT id FROM reports WHERE user_id=$1 AND activity_id=$2 AND report_type=$3',
+      [userId, actId, 'km_ers']
+    );
+    if (exists.rows.length) return; // already reported
+    await pool.query(`
+      INSERT INTO reports (user_id, activity_id, report_date, km, status, report_type, approved_by, approved_at)
+      VALUES ($1,$2,$3,$4,'submitted','km_ers',$5,NOW())
+    `, [userId, actId, reportDate, km, req.user.id]);
+  };
+
+  for (const { user_id, km } of present)    { await upsertResponse(user_id, true);  await createKm(user_id, km); }
+  for (const { user_id }     of absent)     { await upsertResponse(user_id, false); }
+  for (const { user_id, km } of walk_ins)   { await upsertResponse(user_id, true);  await createKm(user_id, km); }
+
+  res.json({ ok: true });
+});
+
 module.exports = router;
