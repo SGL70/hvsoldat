@@ -1,6 +1,6 @@
 const BASE = '/api';
 
-function getToken() {
+export function getToken() {
   return localStorage.getItem('token');
 }
 
@@ -156,4 +156,9 @@ export const api = {
       body: form,
     }).then(r => r.json());
   },
+
+  // KVM-inställningar & AFSE
+  kvmSettings:    ()       => api.get('/kvm/settings'),
+  saveKvmSettings:(data)   => api.put('/kvm/settings', data),
+  afseUrl:        (caseId) => `/api/kvm/cases/${caseId}/afse`,
 };
