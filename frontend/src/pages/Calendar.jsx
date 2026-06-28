@@ -2,6 +2,26 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 
+function buildOrgOptions(units) {
+  const map = {};
+  units.forEach(u => map[u.id] = { ...u, children: [] });
+  const roots = [];
+  units.forEach(u => {
+    if (u.parent_id && map[u.parent_id]) map[u.parent_id].children.push(map[u.id]);
+    else roots.push(map[u.id]);
+  });
+  const INDENT = ['', '  ', '    ', '      '];
+  const result = [];
+  function walk(nodes, depth) {
+    nodes.forEach(n => {
+      result.push({ id: n.id, label: (INDENT[depth] || '        ') + n.name });
+      walk(n.children, depth + 1);
+    });
+  }
+  walk(roots, 0);
+  return result;
+}
+
 function fmt(iso) {
   return new Date(iso).toLocaleDateString('sv-SE', {
     weekday:'short', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'
@@ -61,7 +81,7 @@ function ActivityModal({ activity, onClose, onSaved }) {
   });
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => { api.orgs().then(setOrgs); }, []);
+  useEffect(() => { api.scopedOrgs().then(setOrgs); }, []);
 
   async function submit(e) {
     e.preventDefault();
@@ -103,11 +123,16 @@ function ActivityModal({ activity, onClose, onSaved }) {
                     onChange={e => setForm(f=>({...f,description:e.target.value}))} rows={2}
                     className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-military-steel" />
           {typeSelect}
-          <select value={form.org_unit_id}
-                  onChange={e => setForm(f=>({...f,org_unit_id:e.target.value}))}
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none">
-            {orgs.map(o => <option key={o.id} value={o.id}>{o.name} ({o.type})</option>)}
-          </select>
+          <div>
+            <label className="text-xs text-gray-500 block mb-1">Riktas till</label>
+            <select value={form.org_unit_id}
+                    onChange={e => setForm(f=>({...f,org_unit_id:e.target.value}))}
+                    className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none">
+              {buildOrgOptions(orgs).map(o => (
+                <option key={o.id} value={o.id}>{o.label}</option>
+              ))}
+            </select>
+          </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="text-xs text-gray-500 block mb-1">Start</label>

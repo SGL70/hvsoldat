@@ -39,6 +39,7 @@ export const api = {
 
   // Org
   orgs:            ()              => api.get('/orgs'),
+  scopedOrgs:      ()              => api.get('/orgs/scoped'),
   unitMembers:     (id)            => api.get(`/orgs/${id}/members`),
   createUnit:      (data)          => api.post('/orgs', data),
   updateUnit:      (id, data)      => api.put(`/orgs/${id}`, data),

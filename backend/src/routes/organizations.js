@@ -11,6 +11,39 @@ router.get('/', async (_req, res) => {
   res.json(units.rows);
 });
 
+// GET /api/orgs/scoped — units the current user can target activities to
+router.get('/scoped', async (req, res) => {
+  const TOP_ROLES = ['batCh', 's4', 'stab'];
+  let ids;
+  if (TOP_ROLES.includes(req.user.role) || !req.user.org_unit_id) {
+    const r = await pool.query('SELECT id FROM org_units');
+    ids = r.rows.map(r => r.id);
+  } else {
+    // Walk up from user's unit to find the nearest company (or battalion root)
+    const ancestors = await pool.query(`
+      WITH RECURSIVE anc AS (
+        SELECT id, parent_id, type FROM org_units WHERE id = $1
+        UNION ALL
+        SELECT o.id, o.parent_id, o.type FROM org_units o JOIN anc a ON o.id = a.parent_id
+      ) SELECT id, type FROM anc ORDER BY type`, [req.user.org_unit_id]);
+
+    // Find company ancestor, or fall back to battalion root
+    const company = ancestors.rows.find(r => r.type === 'kompani')
+                 || ancestors.rows.find(r => r.type === 'bataljon')
+                 || { id: req.user.org_unit_id };
+
+    // Get full subtree of that company + battalion root
+    const companyTree = await getSubtreeIds(company.id);
+    const batRoot = await pool.query(`SELECT id FROM org_units WHERE parent_id IS NULL`);
+    ids = [...new Set([...companyTree, ...batRoot.rows.map(r => r.id)])];
+  }
+  const { rows } = await pool.query(
+    'SELECT id, name, type, parent_id FROM org_units WHERE id = ANY($1) ORDER BY parent_id NULLS FIRST, id',
+    [ids]
+  );
+  res.json(rows);
+});
+
 // GET /api/orgs/:id/members
 router.get('/:id/members', async (req, res) => {
   const ids = await getSubtreeIds(req.params.id);
