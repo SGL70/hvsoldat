@@ -2,7 +2,7 @@
 
 Självhostad prototyp av ett digitalt administrativt stödsystem för Hemvärnets kompani- och bataljonsförband. Syftet är att ersätta manuella processer (Excel-listor, pappersblanketter, e-post) med ett modernt webbgränssnitt anpassat för Hemvärnets organisationsstruktur och roller.
 
-> **Status:** Aktiv prototyp — funktionell men inte produktionsklar. BankID-integration implementerad och testad (se `bankid`-branch). Saknar e-postnotiser och säkerhetshärdning för publikt internet.
+> **Status:** Aktiv prototyp — funktionell men inte produktionsklar. BankID-integration implementerad och testad (se `bankid`-branch). E-postnotifieringar via Resend. Publikt tillgänglig via Cloudflare Tunnel + Cloudflare Access (https://hvsoldat.jv10.se).
 
 ![HvSoldat dashboard](screenshot.png)
 
@@ -30,7 +30,7 @@ Självhostad prototyp av ett digitalt administrativt stödsystem för Hemvärnet
 
 **Stack:**
 - **Frontend:** React 18, Vite, Tailwind CSS, React Router
-- **Backend:** Node.js 20, Express, `pg` (PostgreSQL-klient), `jsonwebtoken`, `multer`, `xlsx`
+- **Backend:** Node.js 20, Express, `pg` (PostgreSQL-klient), `jsonwebtoken`, `multer`, `xlsx`, `pdf-lib` (AFSE-generering), `resend` (e-post)
 - **Databas:** PostgreSQL 15
 - **Deploy:** LXC-container på Proxmox (Debian), systemd-tjänst
 
@@ -167,6 +167,9 @@ npm run db:setup
 | `migrate_loss.sql` | Förlustärenden |
 | `migrate_prio.sql` | PRIO-import |
 | `migrate_mr.sql` | MR-spårning (mr_submitted_at på reports) |
+| `migrate_sava.sql` | SÄVA-redovisning (dagslista, timmar) |
+| `migrate_kvm_settings.sql` | KVM-inställningar för AFSE-förifyllning |
+| `migrate_afse_tracking.sql` | AFSE-tidsstämplar och kvittering |
 | `seed.sql` | Mock-användare + exempeldata |
 | `seed_catalog.sql` | 73 standardartiklar (VSH033PG) |
 
@@ -204,13 +207,13 @@ Klicka på QR-koden i inloggningsvyn för att öppna rollväljaren. Inga löseno
 
 ### Nära (prototyp → MVP)
 - [x] **BankID-integration** — implementerad via Idura/Criipto (OIDC) på `bankid`-branch. Testad med BankID för fil och Mobilt BankID. Kräver Idura production-credentials + HTTPS för merge till `master`.
-- [ ] E-postnotifieringar vid statusändringar i ärenden
+- [x] **E-postnotifieringar** — Resend skickar notis vid ny aktivitet, nyhet, nytt ärende och statusändring
 - [ ] Kalender: kategorisering i Avtalsövningar (KFÖ/SÖF/SÖB), Kompletteringsutbildning och Övrigt
 - [ ] Kalender: SÖB-filtrering per roll (kompc/stf/fanjunkare/kvm)
 - [ ] **Kalender: rikta aktivitet till specifik org-enhet** — idag skapas aktiviteter mot en fast enhet; behöver en enhetsväljarpe (bataljon/kompani/pluton/grupp) så t.ex. ett plutonsmöte bara syns för rätt pluton
 - [ ] **Närvaro­registrering** — grpc och uppåt bokför faktisk närvaro efter genomförd aktivitet (separat från OSA-svar)
 - [x] **Export km-ers → MR-Grupp HR** — Excel-export med datumfilter, attesterad-av och spårning av vad som skickats till MR
-- [ ] **AFSE PDF-ifyllning** — fyll i AFSE-blanketten programmatiskt baserat på redovisningsdata; KVM anger generella uppgifter (kompanitillhörighet m.m.) en gång så att de förifylls på alla blanketter
+- [x] **AFSE PDF-ifyllning** — blankett M7102-500360E fylls i automatiskt från ärendedata + KVM-inställningar (myndighet, kostnadsställe m.m.); KVM laddar ned förifylld PDF med ett klick; AFSE-uppföljning visar status per ärende; soldat kvitterar mottagen materiel
 
 ### Funktionella tillägg
 - [ ] Mobilanpassning / PWA (push-notiser)
@@ -243,6 +246,7 @@ Alla endpoints ligger under `/api/` och kräver JWT i `Authorization: Bearer`-he
 | `inventory.js` | `/api/inventory` | Kompaniinventering — starta, besvara och följa upp |
 | `organizations.js` | `/api/orgs` | Org-träd — CRUD för enheter och medlemskap |
 | `prio.js` | `/api/prio` | Parser och import av PRIO-exportfiler (ODS/XLSX) |
+| `kvm.js` | `/api/kvm` | KVM-inställningar, AFSE-generering (pdf-lib), AFSE-uppföljning |
 
 ---
 
