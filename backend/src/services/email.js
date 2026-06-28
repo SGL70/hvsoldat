@@ -22,10 +22,6 @@ async function send(to, subject, html) {
   }
 }
 
-function appLink(path = '') {
-  return `<p style="margin-top:16px"><a href="${APP_URL}${path}" style="background:#1d3557;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;font-size:14px">Öppna HvSoldat</a></p>`;
-}
-
 function wrap(body) {
   return `<div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#222">
     <div style="background:#1d3557;padding:16px 24px;border-radius:8px 8px 0 0">
@@ -33,7 +29,7 @@ function wrap(body) {
     </div>
     <div style="background:#f8f9fa;padding:24px;border-radius:0 0 8px 8px;border:1px solid #e0e0e0">
       ${body}
-      ${appLink()}
+      <p style="margin-top:16px;font-size:14px;color:#444">Logga in på <strong>hvsoldat.se</strong> för att hantera ärendet.</p>
       <p style="font-size:11px;color:#aaa;margin-top:24px">Du får detta mail för att du är registrerad i HvSoldat.</p>
     </div>
   </div>`;

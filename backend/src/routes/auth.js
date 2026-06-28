@@ -37,7 +37,7 @@ router.post('/mock-login', async (req, res) => {
 
   const user = result.rows[0];
   const token = jwt.sign(
-    { id: user.id, role: user.role, org_unit_id: user.org_unit_id },
+    { id: user.id, name: user.name, role: user.role, org_unit_id: user.org_unit_id },
     process.env.JWT_SECRET,
     { expiresIn: '8h' }
   );
