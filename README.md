@@ -197,8 +197,8 @@ Klicka på QR-koden i inloggningsvyn för att öppna rollväljaren. Inga löseno
 | Sara Nilsson | 199001010002 | Gruppchef |
 | Johan Lindqvist | 199001010003 | Plutonchef |
 | Anna Bergström | 199001010004 | Kompanichef |
-| Lars Eriksson | 199001010005 | Komp-VKM |
-| Maria Karlsson | 199001010006 | S4 / Bat-VKM |
+| Lars Eriksson | 199001010005 | Komp-KVM |
+| Maria Karlsson | 199001010006 | S4/Bat-KVM |
 | Peter Svensson | 199001010007 | Bataljonschef |
 
 ---

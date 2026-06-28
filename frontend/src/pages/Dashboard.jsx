@@ -248,7 +248,10 @@ export default function Dashboard() {
     api.myInventory().then(setOpenInv).catch(() => {});
   }, []);
 
-  const upcoming = activities.filter(a => new Date(a.start_time) > new Date()).slice(0, 4);
+  const now = new Date();
+  const upcoming = activities.filter(a => new Date(a.start_time) > now).slice(0, 4);
+  const nextOf = type => activities.filter(a => a.type === type && new Date(a.start_time) > now)
+    .sort((a, b) => new Date(a.start_time) - new Date(b.start_time))[0] || null;
   const issues = equipment.filter(e => e.status !== 'ok');
   const pendingReports = reports.filter(r => r.status === 'draft' || r.status === 'submitted');
 
@@ -279,6 +282,35 @@ export default function Dashboard() {
           </button>
         </div>
       )}
+
+      {/* Avtalsövningar */}
+      <div className="mb-5 grid grid-cols-3 gap-3">
+          {[
+            { type:'kfö', label:'KFÖ', sub:'Kompanifältövning' },
+            { type:'söf', label:'SÖF', sub:'Skjutövning Förband' },
+            { type:'söb', label:'SÖB', sub:'Skjutövning Bataljon' },
+          ].map(({ type, label, sub }) => {
+            const a = nextOf(type);
+            return (
+              <Link key={type} to="/kalender"
+                    className="bg-military-navy text-white rounded-xl p-3 hover:bg-military-navy/90 transition-colors">
+                <div className="text-xs font-bold uppercase tracking-wider opacity-70">{label}</div>
+                <div className="text-xs opacity-60 mb-1">{sub}</div>
+                {a ? (
+                  <>
+                    <div className="text-sm font-semibold leading-snug">{a.title}</div>
+                    <div className="text-xs opacity-80 mt-0.5">
+                      {new Date(a.start_time).toLocaleDateString('sv-SE', { day:'numeric', month:'short', year:'numeric' })}
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-xs opacity-50 italic">Ej planerad</div>
+                )}
+              </Link>
+            );
+          })}
+        </div>
+      </div>
 
       {/* Hero image */}
       <div className="mb-5 rounded-xl overflow-hidden border border-gray-200 shadow-sm">

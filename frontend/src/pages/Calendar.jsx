@@ -13,6 +13,9 @@ const TYPE_COLORS = {
   utbildning:'bg-blue-100 text-blue-700',
   möte:'bg-green-100 text-green-700',
   övrigt:'bg-gray-100 text-gray-600',
+  kfö:'bg-military-navy/10 text-military-navy font-semibold',
+  söf:'bg-military-navy/10 text-military-navy font-semibold',
+  söb:'bg-military-navy/10 text-military-navy font-semibold',
 };
 const RESP_COLORS = {
   ja:'bg-green-100 text-green-800 border-green-200',
@@ -78,6 +81,11 @@ function CreateModal({ onClose, onCreated }) {
             <option value="utbildning">Utbildning</option>
             <option value="möte">Möte</option>
             <option value="övrigt">Övrigt</option>
+            <optgroup label="Avtalsövningar">
+              <option value="kfö">KFÖ — Kompanifältövning</option>
+              <option value="söf">SÖF — Skjutövning Förband</option>
+              <option value="söb">SÖB — Skjutövning Bataljon</option>
+            </optgroup>
           </select>
           <select value={form.org_unit_id}
                   onChange={e => setForm(f=>({...f,org_unit_id:e.target.value}))}
