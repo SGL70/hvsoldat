@@ -40,12 +40,24 @@ function ResponseButtons({ current, onSelect, disabled }) {
   );
 }
 
-function CreateModal({ onClose, onCreated }) {
+function toLocalDT(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function ActivityModal({ activity, onClose, onSaved }) {
   const { user } = useAuth();
-  const [orgs, setOrgs]   = useState([]);
-  const [form, setForm]   = useState({
-    title:'', description:'', type:'övning',
-    start_time:'', end_time:'', org_unit_id: user?.org_unit_id || ''
+  const isEdit = !!activity;
+  const [orgs, setOrgs] = useState([]);
+  const [form, setForm] = useState({
+    title:       activity?.title       || '',
+    description: activity?.description || '',
+    type:        activity?.type        || 'övning',
+    start_time:  activity ? toLocalDT(activity.start_time) : '',
+    end_time:    activity ? toLocalDT(activity.end_time)   : '',
+    org_unit_id: activity?.org_unit_id || user?.org_unit_id || '',
   });
   const [saving, setSaving] = useState(false);
 
@@ -55,17 +67,32 @@ function CreateModal({ onClose, onCreated }) {
     e.preventDefault();
     setSaving(true);
     try {
-      await api.createActivity(form);
-      onCreated();
+      isEdit ? await api.updateActivity(activity.id, form) : await api.createActivity(form);
+      onSaved();
     } catch(err) { alert(err.message); }
     finally { setSaving(false); }
   }
+
+  const typeSelect = (
+    <select value={form.type} onChange={e => setForm(f=>({...f,type:e.target.value}))}
+            className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none">
+      <option value="övning">Övning</option>
+      <option value="utbildning">Utbildning</option>
+      <option value="möte">Möte</option>
+      <option value="övrigt">Övrigt</option>
+      <optgroup label="Avtalsövningar">
+        <option value="kfö">KFÖ — Krigsförbandsövning</option>
+        <option value="söf">SÖF — Särskild övning förband</option>
+        <option value="söb">SÖB — Särskild övning befäl</option>
+      </optgroup>
+    </select>
+  );
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-          <h2 className="font-semibold text-military-navy">Skapa aktivitet</h2>
+          <h2 className="font-semibold text-military-navy">{isEdit ? 'Redigera aktivitet' : 'Skapa aktivitet'}</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">✕</button>
         </div>
         <form onSubmit={submit} className="px-6 py-4 space-y-3">
@@ -75,18 +102,7 @@ function CreateModal({ onClose, onCreated }) {
           <textarea placeholder="Beskrivning (valfritt)" value={form.description}
                     onChange={e => setForm(f=>({...f,description:e.target.value}))} rows={2}
                     className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-military-steel" />
-          <select value={form.type} onChange={e => setForm(f=>({...f,type:e.target.value}))}
-                  className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none">
-            <option value="övning">Övning</option>
-            <option value="utbildning">Utbildning</option>
-            <option value="möte">Möte</option>
-            <option value="övrigt">Övrigt</option>
-            <optgroup label="Avtalsövningar">
-              <option value="kfö">KFÖ — Krigsförbandsövning</option>
-              <option value="söf">SÖF — Särskild övning förband</option>
-              <option value="söb">SÖB — Särskild övning befäl</option>
-            </optgroup>
-          </select>
+          {typeSelect}
           <select value={form.org_unit_id}
                   onChange={e => setForm(f=>({...f,org_unit_id:e.target.value}))}
                   className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none">
@@ -109,7 +125,7 @@ function CreateModal({ onClose, onCreated }) {
           <div className="flex gap-2 pt-1">
             <button type="button" onClick={onClose} className="btn-secondary flex-1">Avbryt</button>
             <button type="submit" disabled={saving} className="btn-primary flex-1">
-              {saving ? 'Skapar…' : 'Skapa'}
+              {saving ? 'Sparar…' : isEdit ? 'Spara' : 'Skapa'}
             </button>
           </div>
         </form>
@@ -180,14 +196,22 @@ function ActivityDetail({ actId }) {
   );
 }
 
-function ActivityCard({ a, responding, onRespond }) {
+function ActivityCard({ a, responding, onRespond, onEdit, onDelete, canEdit }) {
   const [expanded, setExpanded] = useState(false);
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-sm transition-shadow">
       {/* Header */}
       <div className="flex items-start justify-between gap-2 mb-1">
         <span className="font-medium text-gray-900 text-sm">{a.title}</span>
-        <span className={`badge shrink-0 ${TYPE_COLORS[a.type] || TYPE_COLORS.övrigt}`}>{a.type}</span>
+        <div className="flex items-center gap-2 shrink-0">
+          <span className={`badge ${TYPE_COLORS[a.type] || TYPE_COLORS.övrigt}`}>{a.type}</span>
+          {canEdit && (
+            <>
+              <button onClick={() => onEdit(a)} className="text-xs text-gray-400 hover:text-military-navy transition-colors">Redigera</button>
+              <button onClick={() => onDelete(a)} className="text-xs text-gray-400 hover:text-red-600 transition-colors">Ta bort</button>
+            </>
+          )}
+        </div>
       </div>
       <div className="text-xs text-gray-400 mb-0.5">{fmt(a.start_time)} – {fmt(a.end_time)}</div>
       <div className="text-xs text-gray-400">{a.unit_name} · {a.created_by_name}</div>
@@ -220,9 +244,10 @@ function ActivityCard({ a, responding, onRespond }) {
 
 export default function Calendar() {
   const { hasRole } = useAuth();
-  const [activities, setActivities] = useState([]);
-  const [showCreate, setShowCreate] = useState(false);
-  const [responding, setResponding] = useState(null);
+  const [activities,   setActivities]   = useState([]);
+  const [showCreate,   setShowCreate]   = useState(false);
+  const [editActivity, setEditActivity] = useState(null);
+  const [responding,   setResponding]   = useState(null);
 
   function load() { api.activities().then(setActivities); }
   useEffect(load, []);
@@ -232,6 +257,12 @@ export default function Calendar() {
     await api.respond(actId, status).catch(()=>{});
     load();
     setResponding(null);
+  }
+
+  async function handleDelete(a) {
+    if (!confirm(`Ta bort "${a.title}"?`)) return;
+    await api.deleteActivity(a.id).catch(e => alert(e.message));
+    load();
   }
 
   const past     = activities.filter(a => new Date(a.end_time) < new Date());
@@ -256,7 +287,7 @@ export default function Calendar() {
         <section className="mb-8">
           <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Kommande</h2>
           <div className="space-y-3">
-            {upcoming.map(a => <ActivityCard key={a.id} a={a} responding={responding} onRespond={respond} />)}
+            {upcoming.map(a => <ActivityCard key={a.id} a={a} responding={responding} onRespond={respond} canEdit={hasRole('pc')} onEdit={setEditActivity} onDelete={handleDelete} />)}
           </div>
         </section>
       )}
@@ -265,13 +296,16 @@ export default function Calendar() {
         <section>
           <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Genomförda</h2>
           <div className="space-y-3 opacity-60">
-            {past.map(a => <ActivityCard key={a.id} a={a} responding={responding} onRespond={respond} />)}
+            {past.map(a => <ActivityCard key={a.id} a={a} responding={responding} onRespond={respond} canEdit={hasRole('pc')} onEdit={setEditActivity} onDelete={handleDelete} />)}
           </div>
         </section>
       )}
 
       {showCreate && (
-        <CreateModal onClose={() => setShowCreate(false)} onCreated={() => { setShowCreate(false); load(); }} />
+        <ActivityModal onClose={() => setShowCreate(false)} onSaved={() => { setShowCreate(false); load(); }} />
+      )}
+      {editActivity && (
+        <ActivityModal activity={editActivity} onClose={() => setEditActivity(null)} onSaved={() => { setEditActivity(null); load(); }} />
       )}
     </div>
   );

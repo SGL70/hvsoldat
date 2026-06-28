@@ -51,6 +51,8 @@ export const api = {
   activities:       ()         => api.get('/activities'),
   activity:         (id)       => api.get(`/activities/${id}`),
   createActivity:   (data)     => api.post('/activities', data),
+  updateActivity:   (id, data) => api.put(`/activities/${id}`, data),
+  deleteActivity:   (id)       => api.delete(`/activities/${id}`),
   respond:          (id, s)    => api.put(`/activities/${id}/response`, { status: s }),
   attendance:       (id, data) => api.put(`/activities/${id}/attendance`, { attendance: data }),
 

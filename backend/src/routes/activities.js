@@ -100,6 +100,25 @@ router.get('/:id', async (req, res) => {
   res.json({ ...result.rows[0], responses: responses.rows });
 });
 
+// PUT /api/activities/:id — redigera aktivitet (pc+)
+router.put('/:id', requireRole('pc'), async (req, res) => {
+  const { title, description, type, start_time, end_time, org_unit_id } = req.body;
+  const r = await pool.query(
+    `UPDATE activities SET title=$1,description=$2,type=$3,start_time=$4,end_time=$5,org_unit_id=$6
+     WHERE id=$7 RETURNING *`,
+    [title, description, type, start_time, end_time, org_unit_id, req.params.id]
+  );
+  if (!r.rows.length) return res.status(404).json({ error: 'Not found' });
+  res.json(r.rows[0]);
+});
+
+// DELETE /api/activities/:id (pc+)
+router.delete('/:id', requireRole('pc'), async (req, res) => {
+  await pool.query('DELETE FROM activity_responses WHERE activity_id=$1', [req.params.id]);
+  await pool.query('DELETE FROM activities WHERE id=$1', [req.params.id]);
+  res.json({ ok: true });
+});
+
 // PUT /api/activities/:id/response — ja/nej/kanske
 router.put('/:id/response', async (req, res) => {
   const { status } = req.body;
