@@ -32,4 +32,4 @@ function requireRole(minRole) {
   };
 }
 
-module.exports = { requireAuth, requireRole, requireLogistics, ROLE_LEVEL };
+module.exports = { requireAuth, requireRole, requireLogistics, ROLE_LEVEL, LOGISTICS_ROLES };

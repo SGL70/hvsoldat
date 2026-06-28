@@ -1,6 +1,6 @@
 const express = require('express');
 const { pool, getSubtreeIds } = require('../db/index');
-const { requireAuth, requireRole, requireLogistics, ROLE_LEVEL } = require('../middleware/auth');
+const { requireAuth, requireRole, requireLogistics, ROLE_LEVEL, LOGISTICS_ROLES } = require('../middleware/auth');
 
 // KVM sits in Kompanistab — scope up to the parent Kompani so they see all unit members
 const email = require('../services/email');
@@ -116,7 +116,7 @@ router.get('/cases/:id', async (req, res) => {
   `, [req.params.id]);
   if (!result.rows.length) return res.status(404).json({ error: 'Not found' });
   const c = result.rows[0];
-  if (c.user_id !== req.user.id && (ROLE_LEVEL[req.user.role] || 0) < 3) {
+  if (c.user_id !== req.user.id && !LOGISTICS_ROLES.has(req.user.role)) {
     return res.status(403).json({ error: 'Forbidden' });
   }
   res.json(c);
