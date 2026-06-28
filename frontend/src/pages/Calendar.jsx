@@ -10,11 +10,11 @@ function buildOrgOptions(units) {
     if (u.parent_id && map[u.parent_id]) map[u.parent_id].children.push(map[u.id]);
     else roots.push(map[u.id]);
   });
-  const INDENT = ['', '  ', '    ', '      '];
+  const PREFIX = ['', '  — ', '    — ', '      — '];
   const result = [];
   function walk(nodes, depth) {
     nodes.forEach(n => {
-      result.push({ id: n.id, label: (INDENT[depth] || '        ') + n.name });
+      result.push({ id: n.id, label: (PREFIX[depth] ?? '        — ') + n.name });
       walk(n.children, depth + 1);
     });
   }
