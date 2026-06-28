@@ -193,21 +193,27 @@ function ActivityCard({ a, responding, onRespond }) {
       <div className="text-xs text-gray-400">{a.unit_name} · {a.created_by_name}</div>
       {a.description && <p className="text-xs text-gray-500 mt-2">{a.description}</p>}
 
-      {/* Response counts + expand toggle */}
-      <div className="flex items-center justify-between mt-2">
-        <ResponseSummary a={a} />
-        <button onClick={() => setExpanded(e => !e)}
-                className="text-xs text-gray-400 hover:text-military-navy transition-colors shrink-0 ml-2">
-          {expanded ? 'Dölj ▲' : 'Visa svar ▾'}
-        </button>
-      </div>
+      {['kfö','söf','söb'].includes(a.type) ? (
+        <div className="mt-2 text-xs text-military-navy font-medium">Närvaro avtalad</div>
+      ) : (
+        <>
+          {/* Response counts + expand toggle */}
+          <div className="flex items-center justify-between mt-2">
+            <ResponseSummary a={a} />
+            <button onClick={() => setExpanded(e => !e)}
+                    className="text-xs text-gray-400 hover:text-military-navy transition-colors shrink-0 ml-2">
+              {expanded ? 'Dölj ▲' : 'Visa svar ▾'}
+            </button>
+          </div>
 
-      {/* Expanded detail */}
-      {expanded && <ActivityDetail actId={a.id} />}
+          {/* Expanded detail */}
+          {expanded && <ActivityDetail actId={a.id} />}
 
-      {/* My response */}
-      <ResponseButtons current={a.my_response} disabled={responding === a.id}
-                       onSelect={s => onRespond(a.id, s)} />
+          {/* My response */}
+          <ResponseButtons current={a.my_response} disabled={responding === a.id}
+                           onSelect={s => onRespond(a.id, s)} />
+        </>
+      )}
     </div>
   );
 }

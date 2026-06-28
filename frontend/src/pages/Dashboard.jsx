@@ -56,7 +56,7 @@ function InviteCard({ activity }) {
       <div className="text-xs font-semibold text-gray-700 truncate">{activity.title}</div>
       <div className="text-xs text-gray-500 mt-0.5">{fmt(activity.start_time)}</div>
       <div className="text-xs text-gray-400">{activity.unit_name}</div>
-      {!resp && !isPast && (
+      {!resp && !isPast && !['kfö','söf','söb'].includes(activity.type) && (
         <div className="mt-1.5 text-xs font-medium text-yellow-700">Svara →</div>
       )}
     </Link>
