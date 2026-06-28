@@ -120,7 +120,7 @@ export function CreateModal({ onClose, onCreated }) {
           <div className="grid grid-cols-2 gap-2">
             {form.report_type === 'km_ers' && (
               <div>
-                <label className="text-xs text-gray-500 block mb-1">Körmil</label>
+                <label className="text-xs text-gray-500 block mb-1">Km</label>
                 <input type="number" min="0" value={form.km}
                        onChange={e => setForm(f=>({...f, km: e.target.value}))}
                        className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none" />
