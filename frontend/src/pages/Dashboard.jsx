@@ -50,18 +50,33 @@ function InviteCard({ activity }) {
   const isPast = new Date(activity.start_time) < new Date();
   const resp = activity.my_response;
   const colorClass = resp ? RESPONSE_COLORS[resp] : 'bg-gray-50 border-gray-200';
+  const ja      = Number(activity.count_ja)      || 0;
+  const nej     = Number(activity.count_nej)      || 0;
+  const kanske  = Number(activity.count_kanske)   || 0;
+  const pending = Number(activity.count_pending)  || 0;
   return (
     <Link to="/kalender"
           className={`block rounded-xl border p-3 hover:shadow-sm transition-shadow ${colorClass}`}>
-      <div className="text-xs font-semibold text-gray-700 truncate">{activity.title}</div>
-      <div className="text-xs text-gray-500 mt-0.5">{fmt(activity.start_time)}</div>
-      <div className="text-xs text-gray-400">{activity.unit_name}</div>
-      {activity.responsible_name && (
-        <div className="text-xs text-gray-400"><span className="text-military-navy font-medium">Ansvarig:</span> {activity.responsible_name}</div>
-      )}
-      {!resp && !isPast && !['kfö','söf','söb'].includes(activity.type) && (
-        <div className="mt-1.5 text-xs font-medium text-yellow-700">Svara →</div>
-      )}
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <div className="text-xs font-semibold text-gray-700 truncate">{activity.title}</div>
+          <div className="text-xs text-gray-500 mt-0.5">{fmt(activity.start_time)}</div>
+          <div className="text-xs text-gray-400">{activity.unit_name}</div>
+          {activity.responsible_name && (
+            <div className="text-xs text-gray-400"><span className="text-military-navy font-medium">Ansvarig:</span> {activity.responsible_name}</div>
+          )}
+          {!resp && !isPast && !['kfö','söf','söb'].includes(activity.type) && (
+            <div className="mt-1.5 text-xs font-medium text-yellow-700">Svara →</div>
+          )}
+        </div>
+        {!['kfö','söf','söb'].includes(activity.type) && (
+          <div className="text-right text-xs shrink-0 leading-relaxed">
+            <div className="text-green-700">👍 {ja}</div>
+            <div className="text-yellow-700">? {kanske}</div>
+            <div className="text-gray-400">👎 {pending + nej}</div>
+          </div>
+        )}
+      </div>
     </Link>
   );
 }
@@ -270,7 +285,7 @@ export default function Dashboard() {
           <div>
             <p className="text-sm font-bold text-amber-900">Genomför inventering av Personlig materiel</p>
             <p className="text-xs text-amber-700 mt-0.5">
-              Startad av {openInv.initiated_by_name} · {new Date(openInv.created_at).toLocaleDateString('sv-SE')}
+              {new Date(openInv.created_at).toLocaleDateString('sv-SE')}
             </p>
             {openInv.deadline && (
               <p className="text-xs text-amber-800 font-medium mt-0.5">
@@ -321,31 +336,32 @@ export default function Dashboard() {
       </div>
 
       <div className="flex flex-col gap-5 lg:flex-row">
-        {/* Left: activities + news side by side */}
-        <div className="flex-1 min-w-0 grid grid-cols-1 gap-5 sm:grid-cols-2">
-          {/* Aktiviteter */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Kommande aktiviteter</h2>
-              <Link to="/kalender" className="text-xs text-military-steel hover:underline">Visa alla</Link>
-            </div>
-            {upcoming.length === 0 ? (
-              <div className="rounded-xl border border-gray-200 bg-white px-5 py-8 text-center text-sm text-gray-400">
-                Inga kommande aktiviteter
-              </div>
-            ) : (
-              <div className="flex flex-col gap-3">
-                {upcoming.map(a => <InviteCard key={a.id} activity={a} />)}
-              </div>
-            )}
+        {/* Aktiviteter — 20% */}
+        <div className="lg:w-[30%] shrink-0">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Kommande aktiviteter</h2>
+            <Link to="/kalender" className="text-xs text-military-steel hover:underline">Visa alla</Link>
           </div>
+          {upcoming.length === 0 ? (
+            <div className="rounded-xl border border-gray-200 bg-white px-5 py-8 text-center text-sm text-gray-400">
+              Inga kommande aktiviteter
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {upcoming.map(a => <InviteCard key={a.id} activity={a} />)}
+            </div>
+          )}
+        </div>
 
-          {/* Nyheter */}
+        {/* Nyheter — 60% */}
+        <div className="lg:flex-1 min-w-0">
           <NewsPanel canPost={isLogistics()} />
         </div>
 
-        {/* Right widget column */}
-        <div className="flex flex-row flex-wrap gap-4 lg:flex-col lg:w-52 lg:shrink-0">
+        {/* Widgets — 20% */}
+        <div className="lg:w-[20%] lg:shrink-0">
+          <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Sammanfattning</h2>
+          <div className="flex flex-row flex-wrap gap-4 lg:flex-col">
           <Link to="/utrustning"
                 className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-sm transition-shadow block w-full sm:w-auto sm:flex-1 lg:w-auto lg:flex-none">
             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Pers. Utrustning</h3>
@@ -410,6 +426,7 @@ export default function Dashboard() {
               </ul>
             )}
           </Link>
+          </div>
         </div>
       </div>
     </div>

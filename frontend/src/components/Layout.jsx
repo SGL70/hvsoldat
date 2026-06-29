@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { api } from '../api/client';
 import {
   LayoutDashboard, Calendar, ClipboardList, Package,
-  FolderOpen, Users, Settings, Menu,
+  FolderOpen, Users, Settings, Menu, BookOpen,
 } from 'lucide-react';
 import { RankInsignia } from './Rank';
 
@@ -74,6 +74,7 @@ function SidebarContent({ user, pendingBadge, hasRole, isLogistics, onNav, onLog
         <NavItem to="/arenden"    label="Ärenden"          icon={ClipboardList}    badge={pendingBadge} onClick={onNav} />
         <NavItem to="/utrustning" label="Pers. Utrustning" icon={Package}          onClick={onNav} />
         <NavItem to="/dokument"   label="Dokument"         icon={FolderOpen}       onClick={onNav} />
+        <NavItem to="/kompo"      label="Stående KompO"    icon={BookOpen}         onClick={onNav} />
         {hasRole('grpc') && (
           <NavItem to="/enhet"    label="Min enhet"        icon={Users}            onClick={onNav} />
         )}
