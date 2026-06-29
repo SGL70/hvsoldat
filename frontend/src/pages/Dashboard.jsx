@@ -297,7 +297,9 @@ export default function Dashboard() {
             return (
               <Link key={type} to="/kalender"
                     className="bg-military-navy text-white rounded-xl p-3 hover:bg-military-navy/90 transition-colors">
-                <div className="text-xs font-bold uppercase tracking-wider opacity-70 mb-1">{label} · {sub}</div>
+                <div className="text-xs font-bold uppercase tracking-wider opacity-70 mb-1">
+                  {label}<span className="hidden sm:inline"> · {sub}</span>
+                </div>
                 {a ? (
                   <>
                     <div className="text-sm font-semibold leading-snug">{a.title}</div>

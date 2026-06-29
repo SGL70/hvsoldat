@@ -53,7 +53,7 @@ function SidebarContent({ user, pendingBadge, hasRole, isLogistics, onNav, onLog
           <div className="min-w-0 flex-1">
             <div className="text-white text-sm font-medium truncate">{user?.name}</div>
             <div className="text-white/50 text-xs">{ROLE_LABELS[user?.role]}</div>
-            <div className="text-white/30 text-xs truncate">{user?.unit_name}</div>
+            <div className="text-white/50 text-xs truncate">{user?.unit_name}</div>
           </div>
         </div>
         <div className="mt-2 flex flex-col gap-1">

@@ -105,8 +105,8 @@ export default function Login() {
         </div>
 
         {/* Bottomspacer + versionsnummer */}
-        <div className="flex-[2] flex items-end">
-          <p className="text-white/25 text-xs">V0.1 Prototyp</p>
+        <div className="flex-[2] flex items-end justify-center">
+          <p className="text-white/25 text-xs text-center">V0.1 Prototyp</p>
         </div>
       </div>
 
